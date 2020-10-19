@@ -114,6 +114,8 @@ void *mymalloc(size_t requested)
 					free(next);
 					temp->next = NULL;
 				}
+				head = temp;
+
 				return 1;
 	  case Best:
 	            return NULL;
@@ -171,6 +173,13 @@ int mem_holes()
 /* Get the number of bytes allocated */
 int mem_allocated()
 {
+	int allocated = 0;
+	node = head;
+
+	while(node){
+
+	} 
+	
 	return 0;
 }
 
