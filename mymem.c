@@ -114,8 +114,9 @@ void *mymalloc(size_t requested)
 					free(next);
 					temp->next = NULL;
 				}
-				head = temp;
-
+				if (temp->last == NULL) {
+					head = temp;
+				}
 				return 1;
 	  case Best:
 	            return NULL;
@@ -172,11 +173,9 @@ int mem_holes()
 
 	while(node) {
 		if(node->alloc == 0) {
-			areas = areas+1;
-			node = node->next;
-		} else{
-			node = node->next;
+			areas++;
 		}
+		node = node->next;
 	}
 	
 	return areas;
@@ -190,32 +189,72 @@ int mem_allocated()
 
 	while(node){
 		if(node->alloc == 1) {
-			AllocBytes += node.size;
-			node = node->next;
-		} else {
-			node = node->next;
+			AllocBytes += node->size;
 		}
+		node = node->next;
 	} 
 	
 	return AllocBytes;
 }
 
 /* Number of non-allocated bytes */
-int mem_free()
-{
-	return 0;
+int mem_free() {
+	int non_alloc = 0;
+	node = head;
+
+	while (node){
+		if (node->alloc == 0) {
+			non_alloc += node->size;
+		}
+		node = node->next;
+	}
+	
+
+	return non_alloc;
 }
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
-int mem_largest_free()
-{
-	return 0;
+int mem_largest_free() {
+	int freebytes = 0;
+	node = head;
+
+	while (node){
+		if(node->alloc == 0){
+			if(next == NULL) {
+				next = node;
+				next->size = node->size;
+			} else if (next->size < node->size) {
+				next->size = node->size; 
+			}
+			node = node->next;
+		} else {
+			node = node->next;
+		}
+	}
+
+	freebytes = next->size;
+	free(next);
+	
+	return freebytes;
 }
 
 /* Number of free blocks smaller than "size" bytes. */
-int mem_small_free(int size)
-{
-	return 0;
+int mem_small_free(int size) {
+	int blocks = 0;
+	node = head;
+
+	while (node) {
+		if(node->alloc == 0) {
+			if (node->size < size) {
+				blocks++;
+			}
+			node = node->next;
+		} else {
+			node = node->next;
+		}
+	}
+	
+	return blocks;
 }       
 
 char mem_is_alloc(void *ptr)
