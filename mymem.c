@@ -167,20 +167,37 @@ void myfree(void* block) {
 /* Get the number of contiguous areas of free space in memory. */
 int mem_holes()
 {
-	return 0;
+	int areas = 0;
+	node = head;
+
+	while(node) {
+		if(node->alloc == 0) {
+			areas = areas+1;
+			node = node->next;
+		} else{
+			node = node->next;
+		}
+	}
+	
+	return areas;
 }
 
 /* Get the number of bytes allocated */
 int mem_allocated()
 {
-	int allocated = 0;
+	int AllocBytes = 0;
 	node = head;
 
 	while(node){
-
+		if(node->alloc == 1) {
+			AllocBytes += node.size;
+			node = node->next;
+		} else {
+			node = node->next;
+		}
 	} 
 	
-	return 0;
+	return AllocBytes;
 }
 
 /* Number of non-allocated bytes */
