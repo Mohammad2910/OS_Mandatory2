@@ -259,7 +259,21 @@ int mem_small_free(int size) {
 
 char mem_is_alloc(void *ptr)
 {
-        return 0;
+    node = head;
+
+	while (node){
+		if (node == ptr) {
+			if (node->alloc == 0) {
+				return 0;
+			} else {
+				return 1;
+			}
+		} else {
+			node = node->next;
+		}
+	}
+
+	return 0;
 }
 
 /* 
