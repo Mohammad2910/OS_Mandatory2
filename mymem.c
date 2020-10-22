@@ -28,9 +28,7 @@ strategies myStrategy = NotSet;    // Current strategy
 size_t mySize;
 void *myMemory = NULL;
 
-static struct memoryList *node;
 static struct memoryList *head;
-static struct memoryList *holder;
 
 
 /* initmem must be called prior to mymalloc and myfree.
@@ -58,7 +56,6 @@ void initmem(strategies strategy, size_t sz)
 
 	/* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
 	if (head != NULL) free(head);
-	if (holder != NULL) free(holder);
 
 	myMemory = malloc(sz);
 	
@@ -80,6 +77,8 @@ void initmem(strategies strategy, size_t sz)
 
 void *mymalloc(size_t requested)
 {
+	static struct memoryList *holder;
+  	static struct memoryList *node;
 	assert((int)myStrategy > 0);
 	
 	switch (myStrategy)
@@ -87,6 +86,7 @@ void *mymalloc(size_t requested)
 	  case NotSet: 
 	            return NULL;
 	  case First:
+
 				node = head;
 				// Finding block to allocate memory
 				while (node != NULL) {
@@ -119,7 +119,8 @@ void *mymalloc(size_t requested)
 				if (temp->last == NULL) {
 					head = temp;
 				}
-				return head->ptr;
+				printf("%p\n\n", temp->ptr);
+				return temp->ptr;
 	  case Best:
 	            return NULL;
 	  case Worst:
@@ -133,10 +134,13 @@ void *mymalloc(size_t requested)
 
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void* block) {
-	struct memoryList* NodeToFree;
+	struct memoryList* NodeToFree = NULL;
+	static struct memoryList *node;
 	node = head;
 
 	while (node != NULL) {
+		printf("%p\n", node->ptr);
+		printf("%p\n\n", block);
 		if(node->ptr == block) {
 		NodeToFree = node;
 		NodeToFree->alloc = 0;
@@ -164,9 +168,6 @@ void myfree(void* block) {
 		}
 
 	}
-  
-	
-	
 
 	return;
 }
@@ -178,12 +179,12 @@ void myfree(void* block) {
  */
 
 /* Get the number of contiguous areas of free space in memory. */
-int mem_holes()
-{
+int mem_holes() {
+	static struct memoryList *node;
 	int areas = 0;
 	node = head;
 
-	while(node) {
+	while(node != NULL) {
 		if(node->alloc == 0) {
 			areas++;
 		}
@@ -194,8 +195,8 @@ int mem_holes()
 }
 
 /* Get the number of bytes allocated */
-int mem_allocated()
-{
+int mem_allocated(){
+	static struct memoryList *node;
 	int AllocBytes = 0;
 	node = head;
 
@@ -211,6 +212,7 @@ int mem_allocated()
 
 /* Number of non-allocated bytes */
 int mem_free() {
+	static struct memoryList *node;
 	/* NOTE: I could also use "return mySize - mem_allocated();" instead of the following code*/
 	int non_alloc = 0;
 	node = head;
@@ -226,16 +228,18 @@ int mem_free() {
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
 int mem_largest_free() {
+	static struct memoryList *node;
+	static struct memoryList *holder;
 	int freebytes = 0;
 	node = head;
 
 	while (node){
 		if(node->alloc == 0){
-			if(next == NULL) {
-				next = node;
-				next->size = node->size;
-			} else if (next->size < node->size) {
-				next->size = node->size; 
+			if(holder == NULL) {
+				holder = node;
+				holder->size = node->size;
+			} else if (holder->size < node->size) {
+				holder->size = node->size; 
 			}
 			node = node->next;
 		} else {
@@ -243,14 +247,15 @@ int mem_largest_free() {
 		}
 	}
 
-	freebytes = next->size;
-	free(next);
+	freebytes = holder->size;
+	free(holder);
 	
 	return freebytes;
 }
 
 /* Number of free blocks smaller than "size" bytes. */
 int mem_small_free(int size) {
+	static struct memoryList *node;
 	int blocks = 0;
 	node = head;
 
@@ -268,8 +273,8 @@ int mem_small_free(int size) {
 	return blocks;
 }       
 
-char mem_is_alloc(void *ptr)
-{
+char mem_is_alloc(void *ptr){
+	static struct memoryList *node;
     node = head;
 
 	while (node){
@@ -359,7 +364,8 @@ strategies strategyFromString(char * strategy)
 void print_memory()
 {
 	struct memoryList* currMemory = head;
-    while(currMemory != NULL){
+	printf("Head: %p\n", head);
+	while(currMemory != NULL){
         printf("Size: %d, Alloc: %d\n", currMemory->size, currMemory->alloc);
         currMemory = currMemory->next;    
     }
@@ -382,7 +388,8 @@ void print_memory_status()
  * We have given you a simple example to start.
  */
 void try_mymem(int argc, char **argv) {
-        strategies strat;
+    //printf("a");
+	strategies strat;
 	void *a, *b, *c, *d, *e;
 	if(argc > 1)
 	  strat = strategyFromString(argv[1]);
@@ -395,11 +402,13 @@ void try_mymem(int argc, char **argv) {
 	
 	initmem(strat,500);
 	
-	a = mymalloc(100);
-	// b = mymalloc(100);
+	a = mymalloc(200);
+	printf("A: %p\n", a);
+    b = mymalloc(50);
+	printf("B: %p\n", b);
 	// c = mymalloc(100);
-	// myfree(b);
-	// d = mymalloc(50);
+ 	myfree(b);
+	//d = mymalloc(50);
 	// myfree(a);
 	// e = mymalloc(25);
 	
