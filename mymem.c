@@ -30,7 +30,7 @@ void *myMemory = NULL;
 
 static struct memoryList *node;
 static struct memoryList *head;
-static struct memoryList *next;
+static struct memoryList *holder;
 
 
 /* initmem must be called prior to mymalloc and myfree.
@@ -58,7 +58,7 @@ void initmem(strategies strategy, size_t sz)
 
 	/* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
 	if (head != NULL) free(head);
-	if (next != NULL) free(next);
+	if (holder != NULL) free(holder);
 
 	myMemory = malloc(sz);
 	
@@ -88,36 +88,38 @@ void *mymalloc(size_t requested)
 	            return NULL;
 	  case First:
 				node = head;
-
-				while (node) {
+				// Finding block to allocate memory
+				while (node != NULL) {
 					if ((node->size >= requested) && (node->alloc == 0)){
-						next = node;
+						holder = node;
 						break;
 					} else {
 						node = head->next;
 					}
 				}
-
+				
+				// Allocating memory to the block with use of a temporary node/block
+				// Took inspiration from Jakob's solution shown in Lecture 6.
 				struct memoryList *temp = malloc (sizeof(struct memoryList));
 				temp->size = requested;
 				temp->alloc = 1;
-				temp->last = next->last;
-				if( next->last != NULL) {
-					next->last->next = temp;
+				temp->last = holder->last;
+				if( holder->last != NULL) {
+					holder->last->next = temp;
 				}
-				temp->next = next;
-				temp->ptr = next->ptr;
-				next->last = temp;
-				next->size = next->size - requested;
-				next->ptr = next->ptr + requested;
-				if (next->size == 0) {
-					free(next);
+				temp->next = holder;
+				temp->ptr = holder->ptr;
+				holder->last = temp;
+				holder->size = holder->size - requested;
+				holder->ptr = holder->ptr + requested;
+				if (holder->size == 0) {
+					free(holder);
 					temp->next = NULL;
 				}
 				if (temp->last == NULL) {
 					head = temp;
 				}
-				return 1;
+				return head->ptr;
 	  case Best:
 	            return NULL;
 	  case Worst:
@@ -131,18 +133,28 @@ void *mymalloc(size_t requested)
 
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void* block) {
+	struct memoryList* NodeToFree;
 	node = head;
-	while (node) {
+
+	while (node != NULL) {
 		if(node->ptr == block) {
-		node->alloc = 0;
-			if ((node->last != NULL) && (node->last->alloc == 0)) {
-				node->last->size += node->size;
-				node->last->next = node->next;
-				free(node);
-			} else if ((node->next != NULL) && (node->next->alloc == 0)) {
-				node->next->size += node->size;
-				node->next->last = node->last;
-				free(node);	
+		NodeToFree = node;
+		NodeToFree->alloc = 0;
+			if ((NodeToFree->last != NULL) && (NodeToFree->last->alloc == 0)) {
+				
+				NodeToFree->last->size += NodeToFree->size;
+				NodeToFree->last->next = NodeToFree->next;
+				if ( NodeToFree->next != NULL) {
+					NodeToFree->next->last = NodeToFree->last;
+				}
+				free(NodeToFree);
+
+			} else if ((NodeToFree->next != NULL) && (NodeToFree->next->alloc == 0)) {
+				
+				NodeToFree->next->size += NodeToFree->size;
+				NodeToFree->next->last = NodeToFree->last;
+				head = NodeToFree->next;
+				free(NodeToFree);
 			}
 			break;
 		} else if (node->next != NULL) {
@@ -199,6 +211,7 @@ int mem_allocated()
 
 /* Number of non-allocated bytes */
 int mem_free() {
+	/* NOTE: I could also use "return mySize - mem_allocated();" instead of the following code*/
 	int non_alloc = 0;
 	node = head;
 
@@ -208,8 +221,6 @@ int mem_free() {
 		}
 		node = node->next;
 	}
-	
-
 	return non_alloc;
 }
 
@@ -347,6 +358,11 @@ strategies strategyFromString(char * strategy)
 /* Use this function to print out the current contents of memory. */
 void print_memory()
 {
+	struct memoryList* currMemory = head;
+    while(currMemory != NULL){
+        printf("Size: %d, Alloc: %d\n", currMemory->size, currMemory->alloc);
+        currMemory = currMemory->next;    
+    }
 	return;
 }
 
@@ -380,14 +396,14 @@ void try_mymem(int argc, char **argv) {
 	initmem(strat,500);
 	
 	a = mymalloc(100);
-	b = mymalloc(100);
-	c = mymalloc(100);
-	myfree(b);
-	d = mymalloc(50);
-	myfree(a);
-	e = mymalloc(25);
+	// b = mymalloc(100);
+	// c = mymalloc(100);
+	// myfree(b);
+	// d = mymalloc(50);
+	// myfree(a);
+	// e = mymalloc(25);
 	
 	print_memory();
-	print_memory_status();
+	// print_memory_status();
 	
 }
