@@ -86,7 +86,7 @@ strategy.  The results of the tests are placed in "tests.out" .  You may want to
 view this file to see the relative performance of each strategy.
 
 
-Stage 1
+Stage
 -------
 
 Implement all the above functions, for the strategy you have been assigned in the google doc. 
