@@ -133,10 +133,15 @@ void myfree(void* block) {
 	struct memoryList* NodeToFree = NULL;
 	node = head;
 
+	struct memoryList* currBlock = head;
+    if(currBlock == NULL){
+    	printf("Head is null\n");
+        return;
+    }  
 	while (node != NULL) {
 		if(node->ptr == block) {
-		NodeToFree = node;
-		NodeToFree->alloc = 0;
+			NodeToFree = node;
+			NodeToFree->alloc = 0;
 			if ((NodeToFree->last != NULL) && (NodeToFree->last->alloc == 0)) {
 				
 				NodeToFree->last->size += NodeToFree->size;
@@ -144,14 +149,19 @@ void myfree(void* block) {
 				if ( NodeToFree->next != NULL) {
 					NodeToFree->next->last = NodeToFree->last;
 				}
+				node = NodeToFree->last;
 				free(NodeToFree);
-
-			} else if ((NodeToFree->next != NULL) && (NodeToFree->next->alloc == 0)) {
-				
+				NodeToFree = node;
+			
+			}
+			if (NodeToFree->next != NULL && NodeToFree->next->alloc == 0) {
 				NodeToFree->next->size += NodeToFree->size;
 				NodeToFree->next->last = NodeToFree->last;
+				NodeToFree->next->ptr = NodeToFree->ptr;
 				if ( NodeToFree->last != NULL) {
-					NodeToFree->last->next = NodeToFree->next;
+				NodeToFree->last->next = NodeToFree->next;
+				} else {
+					head = NodeToFree->next;
 				}
 				free(NodeToFree);
 			}
@@ -163,7 +173,6 @@ void myfree(void* block) {
 		}
 
 	}
-
 	return;
 }
 
@@ -220,7 +229,7 @@ int mem_free() {
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
 int mem_largest_free() {
-	static struct memoryList *holder;
+	struct memoryList *holder = NULL;
 	int freebytes = 0;
 	node = head;
 
@@ -239,7 +248,6 @@ int mem_largest_free() {
 	}
 
 	freebytes = holder->size;
-	free(holder);
 	
 	return freebytes;
 }
@@ -251,7 +259,7 @@ int mem_small_free(int size) {
 
 	while (node) {
 		if(node->alloc == 0) {
-			if (node->size < size) {
+			if (node->size <= size) {
 				blocks++;
 			}
 			node = node->next;
@@ -267,7 +275,7 @@ char mem_is_alloc(void *ptr){
     node = head;
 
 	while (node){
-		if (node == ptr) {
+		if (node->ptr == ptr) {
 			if (node->alloc == 0) {
 				return 0;
 			} else {
