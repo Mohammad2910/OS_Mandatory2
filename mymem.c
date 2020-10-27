@@ -56,10 +56,9 @@ void initmem(strategies strategy, size_t sz)
 
 	/* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
 	if (head != NULL) free(head);
-	// if (holder != NULL) free(holder);
 	if (node != NULL) free(node);
 
-	myMemory = malloc(sz);
+	myMemory = malloc(mySize);
 	
 	/* TODO: Initialize memory management structure. */
 	head = (struct memoryList*) malloc(sizeof (struct memoryList));
@@ -94,10 +93,12 @@ void *mymalloc(size_t requested)
 						node->alloc = 1;
 						holder = node;
 						return holder->ptr;
+
 					} else if (node->size > requested && node->alloc == 0){
 						int remain = node->size - requested;
 						node->size = requested;
 						node->alloc = 1;
+						
 						struct memoryList* temp = (struct memoryList*) malloc(sizeof(struct memoryList));
 						temp->next = node->next;
 						if( temp->next != NULL) {
@@ -107,9 +108,10 @@ void *mymalloc(size_t requested)
 						temp->last = node;
 						temp->size = remain;
 						temp->alloc = 0;
-						temp->ptr = (char *)node->ptr + requested;
+						temp->ptr = node->ptr + requested;
 						holder = node;
 						return holder->ptr;
+					
 					} else {
 						node = node->next;
 					}
@@ -229,25 +231,19 @@ int mem_free() {
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
 int mem_largest_free() {
-	struct memoryList *holder = NULL;
+	struct memoryList *holder = head;
 	int freebytes = 0;
-	node = head;
+	int check = 0;
 
-	while (node){
-		if(node->alloc == 0){
-			if(holder == NULL) {
-				holder = node;
-				holder->size = node->size;
-			} else if (holder->size < node->size) {
-				holder->size = node->size; 
+	while (holder !=NULL){
+		if(holder->alloc == 0){
+			check = holder->size;
+			if (freebytes < check) {
+				freebytes = check; 
 			}
-			node = node->next;
-		} else {
-			node = node->next;
 		}
+		holder = holder->next;
 	}
-
-	freebytes = holder->size;
 	
 	return freebytes;
 }
@@ -363,7 +359,27 @@ void print_memory()
 
 	struct memoryList* currMemory = head;
 	while(currMemory != NULL){
-        printf("Size: %d, Alloc: %d\n", currMemory->size, currMemory->alloc);
+        printf("____________________________________ \n");
+	    printf("Size: %d, Alloc: %d\n", currMemory->size, currMemory->alloc);
+		printf("alloc: %d\n", currMemory->alloc);
+        printf("current size: %d\n", currMemory->size);
+        printf("ptr addr:%p\n", currMemory->ptr);
+		if (currMemory->last != NULL && currMemory->next != NULL)
+        {
+            printf("\n");
+            printf("ptr next:%p\n", currMemory->next->ptr);
+            printf("ptr last:%p\n", currMemory->last->ptr);
+        }
+		if (currMemory->last == NULL && currMemory->next != NULL)
+        {
+            printf("\n");
+            printf("ptr next:%p\n", currMemory->next->ptr);
+        }
+        if (currMemory->last != NULL && currMemory->next == NULL)
+        {
+            printf("\n");
+            printf("ptr last:%p\n", currMemory->last->ptr);
+        }
         currMemory = currMemory->next;    
     }
 	return;
@@ -396,16 +412,19 @@ void try_mymem(int argc, char **argv) {
 	
 	/* A simple example.  
 	   Each algorithm should produce a different layout. */
+
+	initmem(strat,100);
+	for (int i = 0; i < 10; i++)
+	{
+	mymalloc(10);	
+	}
 	
-	initmem(strat,500);
-	
-	a = mymalloc(200);
-    b = mymalloc(50);
-	c = mymalloc(100);
- 	myfree(b);
-	d = mymalloc(50);
-	myfree(a);
-	e = mymalloc(25);
+	//b = mymalloc(50);
+	//c = mymalloc(100);
+ 	//myfree(b);
+	//d = mymalloc(50);
+	//myfree(a);
+	//e = mymalloc(25);
 	print_memory();
 	// print_memory_status();
 	

@@ -157,7 +157,7 @@ int test_alloc_1(int argc, char **argv) {
 	strategies strategy;
 	int lbound = 1;
 	int ubound = 4;
-
+	
 	if (strategyFromString(*(argv+1))>0)
 		lbound=ubound=strategyFromString(*(argv+1));
 
@@ -171,28 +171,28 @@ int test_alloc_1(int argc, char **argv) {
 		void* lastPointer = NULL;
 		initmem(strategy,100);
 		for (i = 0; i < 100; i++)
-		{
+		{	
+			
 			void* pointer = mymalloc(1);
-			if ( i > 0 && pointer != (lastPointer+1) )
-			{
+			if ( i > 0 && pointer != (lastPointer+1) ) {
 				printf("Allocation with %s was not sequential at %i; expected %p, actual %p\n", strategy_name(strategy), i,lastPointer+1,pointer);
 				return 1;
 			}
+	
 			lastPointer = pointer;
-		}
-
+		} 
+		
 		if (mem_holes() != correct_holes)
 		{
 			printf("Holes not counted as %d with %s\n", correct_holes, strategy_name(strategy));
 			return	1;
 		}
-
+		
 		if (mem_allocated() != correct_alloc)
 		{
 			printf("Allocated memory not reported as %d with %s\n", correct_alloc, strategy_name(strategy));
 			return	1;
 		}
-
 		if (mem_largest_free() != correct_largest_free)
 		{
 			printf("Largest memory block free not reported as %d with %s\n", correct_largest_free, strategy_name(strategy));
