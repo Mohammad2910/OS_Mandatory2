@@ -3,7 +3,7 @@ CCOPTS = -c -g -Wall
 LINKOPTS = -g -lrt 
 
 EXEC=mem
-OBJECTS=testrunner.o mymem.o memorytests.o
+OBJECTS=testrunner.o JohanC.o memorytests.o
 
 all: $(EXEC)
 
